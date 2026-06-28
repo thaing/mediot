@@ -22,3 +22,6 @@ class Device(Base):
     )
 
     user: Mapped["User"] = relationship("User", back_populates="devices")
+    vitals_entries: Mapped[list["Vitals"]] = relationship(
+        "Vitals", back_populates="device"
+    )

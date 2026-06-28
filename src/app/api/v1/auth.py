@@ -1,0 +1,138 @@
+import uuid
+from typing import Literal
+
+from authlib.integrations.starlette_client import OAuth
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+
+from src.app.config import settings
+from src.app.deps import get_db
+from src.app.middleware.auth import create_access_token
+from src.app.schemas.user import UserOut
+from src.models.user import User
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+oauth = OAuth()
+
+if settings.OAUTH_GOOGLE_CLIENT_ID:
+    oauth.register(
+        name="google",
+        client_id=settings.OAUTH_GOOGLE_CLIENT_ID,
+        client_secret=settings.OAUTH_GOOGLE_CLIENT_SECRET,
+        authorize_url="https://accounts.google.com/o/oauth2/auth",
+        access_token_url="https://oauth2.googleapis.com/token",
+        userinfo_endpoint="https://www.googleapis.com/oauth2/v3/userinfo",
+        client_kwargs={"scope": "openid email profile"},
+    )
+
+if settings.OAUTH_APPLE_CLIENT_ID:
+    oauth.register(
+        name="apple",
+        client_id=settings.OAUTH_APPLE_CLIENT_ID,
+        client_secret=settings.OAUTH_APPLE_CLIENT_SECRET,
+        authorize_url="https://appleid.apple.com/auth/authorize",
+        access_token_url="https://appleid.apple.com/auth/token",
+        client_kwargs={"scope": "name email"},
+    )
+
+if settings.OAUTH_FACEBOOK_CLIENT_ID:
+    oauth.register(
+        name="facebook",
+        client_id=settings.OAUTH_FACEBOOK_CLIENT_ID,
+        client_secret=settings.OAUTH_FACEBOOK_CLIENT_SECRET,
+        authorize_url="https://www.facebook.com/v18.0/dialog/oauth",
+        access_token_url="https://graph.facebook.com/v18.0/oauth/access_token",
+        client_kwargs={"scope": "email public_profile"},
+    )
+
+PROVIDERS = ["google", "apple", "facebook"]
+
+
+@router.get("/login/{provider}")
+async def login(provider: str, request: Request):
+    if provider not in PROVIDERS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown provider: {provider}",
+        )
+    redirect_uri = request.url_for("callback", provider=provider)
+    return await oauth.create_client(provider).authorize_redirect(
+        request, redirect_uri
+    )
+
+
+@router.get("/callback/{provider}", name="callback")
+async def callback(
+    provider: str, request: Request, db: Session = Depends(get_db)
+):
+    if provider not in PROVIDERS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unknown provider: {provider}",
+        )
+
+    client = oauth.create_client(provider)
+    token = await client.authorize_access_token(request)
+
+    if provider == "google":
+        userinfo = await client.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo"
+        )
+        profile = userinfo.json()
+        email = profile.get("email", "")
+        first_name = profile.get("given_name", "")
+        last_name = profile.get("family_name", "")
+    elif provider == "apple":
+        userinfo = token.get("userinfo", {})
+        email = userinfo.get("email", "")
+        name_info = userinfo.get("name", {})
+        first_name = name_info.get("firstName", "")
+        last_name = name_info.get("lastName", "")
+    elif provider == "facebook":
+        userinfo = await client.get(
+            "https://graph.facebook.com/me?fields=id,email,first_name,last_name"
+        )
+        profile = userinfo.json()
+        email = profile.get("email", "")
+        first_name = profile.get("first_name", "")
+        last_name = profile.get("last_name", "")
+    else:
+        email = ""
+        first_name = ""
+        last_name = ""
+
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not retrieve email from provider",
+        )
+
+    user = db.query(User).filter_by(
+        email=email, social_provider=provider
+    ).first()
+
+    if user is None:
+        user = User(
+            id=str(uuid.uuid4()),
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            social_provider=provider,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    access_token = create_access_token(user.id)
+    user_out = UserOut(
+        id=user.id,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email,
+        social_provider=user.social_provider,
+        created_at=user.created_at.isoformat() if user.created_at else None,
+    )
+
+    return {"access_token": access_token, "user": user_out.model_dump()}

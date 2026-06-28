@@ -17,6 +17,8 @@ class KafkaProducerService:
             bootstrap_servers=self.broker,
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
             key_serializer=lambda k: k.encode("utf-8") if k else None,
+            max_block_ms=5000,
+            api_version_auto_timeout_ms=5000,
         )
 
     def publish(self, topic: str, key: str | None, value: dict):

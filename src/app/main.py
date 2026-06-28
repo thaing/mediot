@@ -13,10 +13,7 @@ from src.app.services.kafka_producer import get_producer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    producer = get_producer()
-    producer.connect()
     yield
-    producer.close()
 
 
 app = FastAPI(

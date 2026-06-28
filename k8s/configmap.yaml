@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mediot-config
+  namespace: mediot
+data:
+  KAFKA_BROKER: "kafka-service.mediot.svc.cluster.local:9092"
+  DATABASE_HOST: "postgres-host"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "mediot"

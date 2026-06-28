@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediot-worker
+  namespace: mediot
+  labels:
+    app: mediot-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mediot-worker
+  template:
+    metadata:
+      labels:
+        app: mediot-worker
+    spec:
+      containers:
+        - name: worker
+          image: mediot-worker:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: mediot-config
+            - secretRef:
+                name: mediot-secrets
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - python3
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

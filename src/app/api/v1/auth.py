@@ -57,10 +57,14 @@ async def login(provider: str, request: Request):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unknown provider: {provider}",
         )
+    client = oauth.create_client(provider)
+    if client is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"{provider} OAuth is not configured",
+        )
     redirect_uri = request.url_for("callback", provider=provider)
-    return await oauth.create_client(provider).authorize_redirect(
-        request, redirect_uri
-    )
+    return await client.authorize_redirect(request, redirect_uri)
 
 
 @router.get("/callback/{provider}", name="callback")

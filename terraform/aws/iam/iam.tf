@@ -24,14 +24,19 @@ resource "aws_iam_policy" "developer" {
         Effect = "Allow"
         Action = [
           "ec2:CreateVpc", "ec2:DeleteVpc", "ec2:DescribeVpcs", "ec2:ModifyVpcAttribute",
-          "ec2:CreateSubnet", "ec2:DeleteSubnet", "ec2:DescribeSubnets",
+          "ec2:DescribeVpcAttribute",
+          "ec2:CreateSubnet", "ec2:DeleteSubnet", "ec2:DescribeSubnets", "ec2:ModifySubnetAttribute",
           "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
+          "ec2:DescribeInternetGateways",
           "ec2:CreateNatGateway", "ec2:DeleteNatGateway", "ec2:DescribeNatGateways",
           "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:DescribeAddresses", "ec2:DescribeAddressesAttribute",
           "ec2:CreateRouteTable", "ec2:DeleteRouteTable", "ec2:CreateRoute", "ec2:DeleteRoute",
-          "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
+          "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable", "ec2:ReplaceRouteTableAssociation",
           "ec2:DescribeRouteTables", "ec2:DescribeAvailabilityZones",
-          "ec2:CreateTags",
+          "ec2:CreateTags", "ec2:DeleteTags",
+          "ec2:CreateNetworkInterface", "ec2:DeleteNetworkInterface", "ec2:DescribeNetworkInterfaces",
+          "ec2:CreateVpcEndpoint", "ec2:DeleteVpcEndpoints", "ec2:DescribeVpcEndpoints",
+          "ec2:DescribeVpcEndpointServiceConfigurations",
         ]
         Resource = "*"
       },
@@ -53,6 +58,8 @@ resource "aws_iam_policy" "developer" {
           "eks:CreateCluster", "eks:DeleteCluster", "eks:DescribeCluster",
           "eks:CreateNodegroup", "eks:DeleteNodegroup", "eks:DescribeNodegroup",
           "eks:ListClusters", "eks:ListNodegroups",
+          "eks:DescribeUpdate",
+          "eks:TagResource", "eks:UntagResource",
         ]
         Resource = "*"
       },
@@ -64,8 +71,16 @@ resource "aws_iam_policy" "developer" {
           "iam:PassRole", "iam:ListRoles", "iam:ListRolePolicies",
           "iam:AttachRolePolicy", "iam:DetachRolePolicy",
           "iam:ListAttachedRolePolicies", "iam:GetRolePolicy",
+          "iam:TagRole", "iam:UntagRole",
         ]
         Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/mediot-*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:CreateServiceLinkedRole",
+        ]
+        Resource = "arn:aws:iam::*:role/aws-service-role/*"
       },
       # ── IAM instance profiles (needed by EKS node groups) ──
       {
@@ -84,6 +99,15 @@ resource "aws_iam_policy" "developer" {
           "rds:CreateDBInstance", "rds:DeleteDBInstance", "rds:DescribeDBInstances",
           "rds:ModifyDBInstance", "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup",
           "rds:DescribeDBSubnetGroups", "rds:ListTagsForResource",
+          "rds:AddTagsToResource", "rds:RemoveTagsFromResource",
+        ]
+        Resource = "*"
+      },
+      # ── KMS (RDS encryption) ──
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:CreateGrant", "kms:DescribeKey", "kms:ListKeys",
         ]
         Resource = "*"
       },
@@ -105,6 +129,8 @@ resource "aws_iam_policy" "developer" {
           "s3:CreateBucket", "s3:DeleteBucket", "s3:ListBucket",
           "s3:GetObject", "s3:PutObject", "s3:DeleteObject",
           "s3:GetBucketVersioning", "s3:PutBucketVersioning",
+          "s3:GetBucketPublicAccessBlock", "s3:PutBucketPublicAccessBlock",
+          "s3:GetEncryptionConfiguration", "s3:PutEncryptionConfiguration",
         ]
         Resource = [
           "arn:aws:s3:::${local.state_bucket_name}",

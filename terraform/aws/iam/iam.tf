@@ -63,6 +63,18 @@ resource "aws_iam_policy" "developer" {
         ]
         Resource = "*"
       },
+      # ── EC2 / Auto Scaling (EKS node groups) ──
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:RunInstances", "ec2:TerminateInstances",
+          "ec2:DescribeLaunchTemplateVersions", "ec2:DescribeInstanceTypes",
+          "autoscaling:CreateAutoScalingGroup", "autoscaling:DeleteAutoScalingGroup",
+          "autoscaling:DescribeAutoScalingGroups",
+          "autoscaling:UpdateAutoScalingGroup",
+        ]
+        Resource = "*"
+      },
       # ── IAM (roles only — no user/group/policy management) ──
       {
         Effect = "Allow"
@@ -79,6 +91,7 @@ resource "aws_iam_policy" "developer" {
         Effect = "Allow"
         Action = [
           "iam:CreateServiceLinkedRole",
+          "iam:GetRole",
         ]
         Resource = "arn:aws:iam::*:role/aws-service-role/*"
       },

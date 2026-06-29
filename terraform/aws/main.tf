@@ -50,13 +50,6 @@ resource "aws_internet_gateway" "igw" {
   tags = { Name = "mediot-igw" }
 }
 
-# NAT Gateway
-resource "aws_eip" "nat" {}
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
-}
-
 # Route tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.mediot.id
@@ -69,19 +62,6 @@ resource "aws_route_table_association" "public" {
   count          = 2
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.mediot.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
-}
-resource "aws_route_table_association" "private" {
-  count          = 2
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
 }
 
 # EKS IAM
@@ -140,7 +120,7 @@ resource "aws_eks_node_group" "mediot" {
   cluster_name    = aws_eks_cluster.mediot.name
   node_group_name = "mediot-nodes"
   node_role_arn   = aws_iam_role.eks_node.arn
-  subnet_ids      = aws_subnet.private[*].id
+  subnet_ids      = aws_subnet.public[*].id
   instance_types  = [var.node_instance_type]
   scaling_config {
     desired_size = var.node_count

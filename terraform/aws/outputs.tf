@@ -1,4 +1,3 @@
-output "cluster_endpoint" { value = aws_eks_cluster.mediot.endpoint }
-output "cluster_name" { value = aws_eks_cluster.mediot.name }
-output "db_host" { value = aws_db_instance.postgres.address }
-output "db_port" { value = aws_db_instance.postgres.port }
+output "vpc_id" { value = aws_vpc.mediot.id }
+output "public_subnet_ids" { value = aws_subnet.public[*].id }
+output "private_subnet_ids" { value = aws_subnet.private[*].id }

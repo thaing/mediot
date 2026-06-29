@@ -67,7 +67,7 @@ resource "aws_iam_policy" "developer" {
       {
         Effect = "Allow"
         Action = [
-          "ec2:RunInstances", "ec2:TerminateInstances",
+          "ec2:RunInstances", "ec2:TerminateInstances", "ec2:DisassociateAddress",
           "ec2:DescribeLaunchTemplateVersions", "ec2:DescribeInstanceTypes",
           "autoscaling:CreateAutoScalingGroup", "autoscaling:DeleteAutoScalingGroup",
           "autoscaling:DescribeAutoScalingGroups",

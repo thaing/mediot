@@ -129,6 +129,11 @@ resource "aws_iam_group_policy_attachment" "developer" {
   policy_arn = aws_iam_policy.developer.arn
 }
 
+resource "aws_iam_group_policy_attachment" "developer_login" {
+  group      = aws_iam_group.developer.name
+  policy_arn = "arn:aws:iam::aws:policy/SignInLocalDevelopmentAccess"
+}
+
 # --- Add users to group ---
 resource "aws_iam_user_group_membership" "developer" {
   for_each = toset(var.developer_users)

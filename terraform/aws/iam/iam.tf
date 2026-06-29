@@ -27,10 +27,11 @@ resource "aws_iam_policy" "developer" {
           "ec2:CreateSubnet", "ec2:DeleteSubnet", "ec2:DescribeSubnets",
           "ec2:CreateInternetGateway", "ec2:DeleteInternetGateway", "ec2:AttachInternetGateway", "ec2:DetachInternetGateway",
           "ec2:CreateNatGateway", "ec2:DeleteNatGateway", "ec2:DescribeNatGateways",
-          "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:DescribeAddresses",
+          "ec2:AllocateAddress", "ec2:ReleaseAddress", "ec2:DescribeAddresses", "ec2:DescribeAddressesAttribute",
           "ec2:CreateRouteTable", "ec2:DeleteRouteTable", "ec2:CreateRoute", "ec2:DeleteRoute",
           "ec2:AssociateRouteTable", "ec2:DisassociateRouteTable",
           "ec2:DescribeRouteTables", "ec2:DescribeAvailabilityZones",
+          "ec2:CreateTags",
         ]
         Resource = "*"
       },

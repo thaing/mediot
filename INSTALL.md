@@ -12,6 +12,43 @@ Complete deployment instructions for the medIoT platform on AWS and GCP.
 
 ---
 
+## Local Development
+
+No cloud resources needed. Uses SQLite, no Kafka, no Kubernetes.
+
+### 1. Start the API
+
+```bash
+uvicorn src.app.main:app --port 8000 --reload
+```
+
+Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+### 2. Run the device simulator
+
+```bash
+# Default: device HM-2790, 1 reading/sec, starts at 100% battery
+python scripts/simulator.py --api-key change-me-device-api-key
+
+# Custom settings
+python scripts/simulator.py --api-key change-me-device-api-key --device-id MY-DEVICE-01 --interval 0.5 --start-battery 50
+
+# See all options
+python scripts/simulator.py --help
+```
+
+POSTs randomized vitals to `/api/v1/readings/` every second. Battery drops 1% per 100 readings. Exits at 0%.
+
+### 3. Start the frontend
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173). Dev server proxies `/api` to port 8000.
+
+---
+
 ## AWS Deployment
 
 ### 1. Configure AWS credentials (admin)
@@ -59,7 +96,7 @@ terraform init
 terraform apply -var='db_password=YourSecurePassword123!'
 ```
 
-**Provisioned resources:** VPC (172.30.0.0/16), public subnets, IGW, EKS cluster (t3.medium nodes), RDS PostgreSQL (db.t3.micro, deletion-protected)
+**Provisioned resources:** VPC (172.32.0.0/16), public subnets, IGW, EKS cluster (t3.medium nodes), RDS PostgreSQL (db.t3.micro, deletion-protected)
 
 > **Cost tip:** Destroy EKS when not in use (`cd terraform/aws/eks && terraform destroy`). RDS in private subnets survives independently thanks to `deletion_protection = true`.
 

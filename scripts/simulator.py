@@ -46,7 +46,7 @@ def main():
         "--batch-size",
         type=int,
         default=100,
-        help="Readings before battery drops 1%",
+        help="Readings before battery drops 1 percent",
     )
     parser.add_argument("--start-battery", type=int, default=100)
     args = parser.parse_args()

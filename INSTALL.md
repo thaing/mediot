@@ -114,7 +114,7 @@ gcloud container clusters get-credentials mediot-cluster --region us-central1
 kubectl get nodes  # verify connectivity
 ```
 
-### 4. Build and push container images
+### 4. Build and push container images (GCP)
 
 ```bash
 # API

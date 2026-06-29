@@ -14,32 +14,63 @@ Complete deployment instructions for the medIoT platform on AWS and GCP.
 
 ## AWS Deployment
 
-### 1. Configure AWS credentials
+### 1. Configure AWS credentials (admin)
 
 ```bash
 aws configure
-# Enter your AWS Access Key ID, Secret Access Key, and default region (us-east-1)
+# Use admin credentials to create IAM resources
 ```
 
-### 2. Initialize and apply Terraform
+### 2. Create Developer IAM group (admin credentials)
+
+```bash
+cd terraform/aws/iam
+terraform init
+terraform apply -var='developer_users=["YOUR_USERNAME"]'
+```
+
+Add your IAM user to the Developer group, then switch to those credentials:
+
+```bash
+aws configure  # switch to Developer user credentials
+```
+
+### 3. Provision networking (VPC, subnets)
 
 ```bash
 cd terraform/aws
 terraform init
-terraform plan -var="db_password=YourSecurePassword123!"
-terraform apply -var="db_password=YourSecurePassword123!"
+terraform apply
 ```
 
-**Provisioned resources:** VPC, subnets, Internet Gateway, NAT Gateway, EKS cluster (2 t3.medium nodes), RDS PostgreSQL (db.t3.micro)
+### 4. Provision EKS cluster
 
-### 3. Configure kubectl
+```bash
+cd terraform/aws/eks
+terraform init
+terraform apply
+```
+
+### 5. Provision RDS PostgreSQL
+
+```bash
+cd terraform/aws/rds
+terraform init
+terraform apply -var='db_password=YourSecurePassword123!'
+```
+
+**Provisioned resources:** VPC (172.30.0.0/16), public subnets, IGW, EKS cluster (t3.medium nodes), RDS PostgreSQL (db.t3.micro, deletion-protected)
+
+> **Cost tip:** Destroy EKS when not in use (`cd terraform/aws/eks && terraform destroy`). RDS in private subnets survives independently thanks to `deletion_protection = true`.
+
+### 6. Configure kubectl
 
 ```bash
 aws eks update-kubeconfig --region us-east-1 --name mediot-cluster
-kubectl get nodes  # verify connectivity
+kubectl get nodes
 ```
 
-### 4. Build and push container images
+### 7. Build and push container images
 
 ```bash
 # API
@@ -61,22 +92,25 @@ docker tag mediot-frontend:latest <aws-account>.dkr.ecr.us-east-1.amazonaws.com/
 docker push <aws-account>.dkr.ecr.us-east-1.amazonaws.com/mediot-frontend:latest
 ```
 
-### 5. Update ConfigMap with RDS endpoint
+### 8. Update ConfigMap with RDS endpoint
 
-Edit `k8s/configmap.yaml` and replace `DATABASE_HOST` with the RDS endpoint from Terraform output:
+Edit `k8s/configmap.yaml` and replace `DATABASE_HOST` with the RDS endpoint:
 
 ```bash
+cd terraform/aws/rds
 terraform output db_host
 ```
 
-### 6. Deploy to Kubernetes
+Also update `k8s/secret.yaml` — replace `DATABASE_URL` with the actual connection string and set a strong `API_KEY` + `JWT_SECRET`.
+
+### 9. Deploy to Kubernetes
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/
 ```
 
-### 7. Verify deployment
+### 10. Verify deployment
 
 ```bash
 kubectl get pods -n mediot

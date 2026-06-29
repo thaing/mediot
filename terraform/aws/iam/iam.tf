@@ -130,6 +130,7 @@ resource "aws_iam_group_policy_attachment" "developer" {
 }
 
 resource "aws_iam_group_policy_attachment" "developer_login" {
+  count      = var.attach_login_policy ? 1 : 0
   group      = aws_iam_group.developer.name
   policy_arn = "arn:aws:iam::aws:policy/SignInLocalDevelopmentAccess"
 }

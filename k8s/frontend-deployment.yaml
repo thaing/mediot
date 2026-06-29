@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: mediot-frontend:latest
+          image: 697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

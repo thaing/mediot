@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: mediot-worker:latest
+          image: 697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-worker:latest
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

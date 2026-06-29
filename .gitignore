@@ -6,3 +6,9 @@ __pycache__/
 .env
 venv/
 .venv/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan

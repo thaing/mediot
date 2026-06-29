@@ -19,5 +19,5 @@ variable "s3_backend_bucket" {
 variable "attach_login_policy" {
   description = "Attach SignInLocalDevelopmentAccess (custom policy) to Developer group"
   type        = bool
-  default     = false
+  default     = true
 }

@@ -58,7 +58,7 @@ resource "aws_iam_policy" "developer" {
           "eks:CreateCluster", "eks:DeleteCluster", "eks:DescribeCluster",
           "eks:CreateNodegroup", "eks:DeleteNodegroup", "eks:DescribeNodegroup",
           "eks:ListClusters", "eks:ListNodegroups",
-          "eks:DescribeUpdate",
+          "eks:DescribeUpdate", "eks:DescribeClusterVersions",
           "eks:TagResource", "eks:UntagResource",
         ]
         Resource = "*"
@@ -84,17 +84,11 @@ resource "aws_iam_policy" "developer" {
           "iam:AttachRolePolicy", "iam:DetachRolePolicy",
           "iam:ListAttachedRolePolicies", "iam:GetRolePolicy",
           "iam:TagRole", "iam:UntagRole",
-        ]
-        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/mediot-*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
           "iam:CreateServiceLinkedRole",
-          "iam:GetRole",
         ]
-        Resource = "arn:aws:iam::*:role/aws-service-role/*"
+        Resource = "*"
       },
+
       # ── IAM instance profiles (needed by EKS node groups) ──
       {
         Effect = "Allow"
@@ -111,8 +105,8 @@ resource "aws_iam_policy" "developer" {
         Action = [
           "rds:CreateDBInstance", "rds:DeleteDBInstance", "rds:DescribeDBInstances",
           "rds:ModifyDBInstance", "rds:CreateDBSubnetGroup", "rds:DeleteDBSubnetGroup",
-          "rds:DescribeDBSubnetGroups", "rds:ListTagsForResource",
-          "rds:AddTagsToResource", "rds:RemoveTagsFromResource",
+          "rds:DescribeDBSubnetGroups", "rds:ListTagsForResource", "rds:DescribeDBClusters",
+          "rds:AddTagsToResource", "rds:RemoveTagsFromResource", "rds:DescribeGlobalClusters"
         ]
         Resource = "*"
       },

@@ -96,6 +96,7 @@ resource "aws_iam_policy" "developer" {
           "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile",
           "iam:GetInstanceProfile", "iam:AddRoleToInstanceProfile",
           "iam:RemoveRoleFromInstanceProfile", "iam:ListInstanceProfiles",
+          "iam:ListInstanceProfilesForRole"
         ]
         Resource = "*"
       },
@@ -122,10 +123,20 @@ resource "aws_iam_policy" "developer" {
       {
         Effect = "Allow"
         Action = [
-          "ecr:CreateRepository", "ecr:DescribeRepositories",
-          "ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability",
-          "ecr:InitiateLayerUpload", "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload", "ecr:PutImage",
+          "ecr:GetAuthorizationToken",
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:DescribeRepositories",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage",
+          "ecr:BatchGetImage",
         ]
         Resource = "*"
       },
@@ -143,6 +154,12 @@ resource "aws_iam_policy" "developer" {
           "arn:aws:s3:::${local.state_bucket_name}",
           "arn:aws:s3:::${local.state_bucket_name}/*",
         ]
+      },
+      # ── Allow all CloudWatch ──
+      {
+        Effect = "Allow"
+        Action = "cloudwatch:*"
+        Resource = "*"
       },
       # ── Deny sensitive IAM actions ──
       {

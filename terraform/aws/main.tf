@@ -7,7 +7,7 @@ terraform {
   required_version = ">= 1.5"
 
   backend "s3" {
-    bucket  = "mediot-tfstate-iam"
+    bucket  = "mediot-tfstate"
     key     = "main/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true

@@ -11,19 +11,15 @@ data "aws_subnets" "private" {
   }
 }
 
-# Look up EKS cluster to get its security group for RDS access
-data "aws_eks_cluster" "mediot" {
-  name = "mediot-cluster"
-}
-
-# RDS security group — allows EKS cluster to connect
+# RDS security group — allows inbound from VPC CIDR (survives EKS deletion)
 resource "aws_security_group" "rds" {
+  name   = "mediot-rds-sg"
   vpc_id = data.aws_vpc.mediot.id
   ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [data.aws_eks_cluster.mediot.vpc_config[0].cluster_security_group_id]
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = [data.aws_vpc.mediot.cidr_block]
   }
   egress {
     from_port   = 0
@@ -52,5 +48,6 @@ resource "aws_db_instance" "postgres" {
   db_subnet_group_name    = aws_db_subnet_group.mediot.name
   vpc_security_group_ids  = [aws_security_group.rds.id]
   publicly_accessible     = false
-  skip_final_snapshot     = true
+  skip_final_snapshot     = false
+  deletion_protection     = true
 }

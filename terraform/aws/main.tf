@@ -7,8 +7,7 @@ terraform {
   required_version = ">= 1.5"
 
   backend "s3" {
-    # Override via: terraform init -backend-config="bucket=mediot-tfstate-YOUR_ACCOUNT"
-    bucket  = "mediot-tfstate-423528106344"
+    bucket  = "mediot-tfstate"
     key     = "main/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true

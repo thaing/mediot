@@ -3,7 +3,7 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  state_bucket_name = var.s3_backend_bucket != "" ? var.s3_backend_bucket : "mediot-tfstate-${data.aws_caller_identity.current.account_id}"
+  state_bucket_name = var.s3_backend_bucket != "" ? var.s3_backend_bucket : "mediot-tfstate"
 }
 
 # --- IAM Group ---

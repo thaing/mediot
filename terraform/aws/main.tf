@@ -20,7 +20,7 @@ data "aws_availability_zones" "available" { state = "available" }
 
 # VPC
 resource "aws_vpc" "mediot" {
-  cidr_block           = "172.30.0.0/16"
+  cidr_block           = "172.32.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
   tags = { Name = "mediot-vpc" }
@@ -30,7 +30,7 @@ resource "aws_vpc" "mediot" {
 resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.mediot.id
-  cidr_block              = "172.30.${count.index}.0/24"
+  cidr_block              = "172.32.${count.index}.0/24"
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
   tags = { Name = "mediot-public-${count.index}" }
@@ -39,7 +39,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   count             = 2
   vpc_id            = aws_vpc.mediot.id
-  cidr_block        = "172.30.${count.index + 10}.0/24"
+  cidr_block        = "172.32.${count.index + 10}.0/24"
   availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = { Name = "mediot-private-${count.index}" }
 }

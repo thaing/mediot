@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "sqlite:///./mediot.db"
+    DATABASE_URL: str = "sqlite:////app/mediot.db"
     KAFKA_BROKER: str = "localhost:9092"
     JWT_SECRET: str = "change-me-in-production-use-a-strong-secret"
     API_KEY: str = "change-me-device-api-key"

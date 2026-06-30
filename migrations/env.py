@@ -14,7 +14,7 @@ from src.models import User, Device, Vitals  # noqa: F401 ensure models are load
 
 target_metadata = Base.metadata
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./mediot.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////app/mediot.db")
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 

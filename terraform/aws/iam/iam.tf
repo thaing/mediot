@@ -137,6 +137,7 @@ resource "aws_iam_policy" "developer" {
           "ecr:CompleteLayerUpload",
           "ecr:PutImage",
           "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
         ]
         Resource = "*"
       },

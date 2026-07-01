@@ -11,6 +11,22 @@ Complete deployment instructions for the medIoT platform on AWS and GCP.
 - **Minikube** — for local K8s testing (optional: verify images and manifests before cloud deploy)
 - **Domain name** (optional) — for Ingress TLS
 
+### kubectl context switching
+
+Each platform creates its own kubectl context. List and switch between them:
+
+```bash
+kubectl config get-contexts          # see all contexts
+kubectl config current-context        # which one is active
+
+# Switch
+kubectl config use-context minikube                           # local
+kubectl config use-context arn:aws:eks:us-east-1:697957957974:cluster/mediot-cluster  # AWS
+kubectl config use-context gke_PROJECT_us-central1_mediot-cluster                     # GCP
+```
+
+Contexts are created by `minikube start`, `aws eks update-kubeconfig`, and `gcloud container clusters get-credentials`. No setup needed beyond those commands.
+
 ---
 
 ## Local Development

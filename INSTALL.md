@@ -8,6 +8,7 @@ Complete deployment instructions for the medIoT platform on AWS and GCP.
 - **kubectl** — [Install](https://kubernetes.io/docs/tasks/tools/)
 - **AWS CLI** (`aws`) or **gcloud CLI** (`gcloud`) — depending on target cloud
 - **Docker** — for building container images
+- **Minikube** — for local K8s testing (optional: verify images and manifests before cloud deploy)
 - **Domain name** (optional) — for Ingress TLS
 
 ---
@@ -46,6 +47,106 @@ cd frontend && npm install && npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173). Dev server proxies `/api` to port 8000.
+
+---
+
+## Minikube Testing
+
+Verify all containers, manifests, and the full K8s topology before deploying to the cloud. Runs everything locally — no AWS or GCP needed.
+
+### 1. Start Minikube
+
+```bash
+minikube start --cpus=4 --memory=8192
+minikube addons enable ingress
+```
+
+### 2. Build images into Minikube's Docker
+
+Point your shell at Minikube's Docker daemon, then build all images:
+
+```bash
+eval $(minikube docker-env)
+
+docker build -t mediot-api:latest -f Dockerfile.api .
+docker build -t mediot-worker:latest -f Dockerfile.worker .
+docker build -t mediot-frontend:latest -f Dockerfile.frontend .
+```
+
+Images are now available inside the cluster — no registry needed.
+
+### 3. Adjust manifests for local images
+
+Replace ECR URIs with local image names (Minikube pulls from its own Docker):
+
+```bash
+cd k8s
+sed -i 's|697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-api:latest|mediot-api:latest|' api-deployment.yaml
+sed -i 's|697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-worker:latest|mediot-worker:latest|' worker-deployment.yaml
+sed -i 's|697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-frontend:latest|mediot-frontend:latest|' frontend-deployment.yaml
+```
+
+Also make `imagePullPolicy: Never` (Minikube won't try to pull from a registry):
+
+```bash
+sed -i 's|imagePullPolicy: IfNotPresent|imagePullPolicy: Never|' api-deployment.yaml
+sed -i 's|imagePullPolicy: IfNotPresent|imagePullPolicy: Never|' worker-deployment.yaml
+sed -i 's|imagePullPolicy: IfNotPresent|imagePullPolicy: Never|' frontend-deployment.yaml
+```
+
+### 4. Update ConfigMap for local DB
+
+Edit `k8s/configmap.yaml` — point at SQLite:
+
+```yaml
+KAFKA_BROKER: "kafka-service.mediot.svc.cluster.local:9092"
+DATABASE_HOST: ""            # not used for SQLite
+DATABASE_PORT: ""
+DATABASE_NAME: ""
+```
+
+Edit `k8s/secret.yaml` — use SQLite + fill in placeholder secrets:
+
+```yaml
+DATABASE_URL: "sqlite:////app/mediot.db"
+API_KEY: "change-me-device-api-key"
+JWT_SECRET: "change-me-jwt-secret-at-least-32-characters"
+```
+
+### 5. Deploy
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/
+```
+
+### 6. Verify
+
+```bash
+# Wait for all pods
+kubectl get pods -n mediot -w
+
+# Expose the frontend
+minikube service frontend-service -n mediot
+
+# Or use ingress (after minikube addons enable ingress)
+minikube ip
+curl -H "Host: mediot.local" http://$(minikube ip)/api/docs
+```
+
+### 7. Clean up
+
+```bash
+kubectl delete -f k8s/
+minikube stop
+```
+
+### 8. Revert manifests for cloud deployment
+
+```bash
+cd k8s
+git checkout -- .
+```
 
 ---
 

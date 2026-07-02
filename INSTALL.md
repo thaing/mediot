@@ -6,6 +6,7 @@ Complete deployment instructions for the medIoT platform on AWS and GCP.
 
 - **Terraform >= 1.5** — [Install](https://developer.hashicorp.com/terraform/downloads)
 - **kubectl** — [Install](https://kubernetes.io/docs/tasks/tools/)
+- **Helm >= 3** — [Install](https://helm.sh/docs/intro/install/) (for External Secrets Operator)
 - **AWS CLI** (`aws`) or **gcloud CLI** (`gcloud`) — depending on target cloud
 - **Docker** — for building container images
 - **Minikube** — for local K8s testing (optional: verify images and manifests before cloud deploy)

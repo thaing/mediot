@@ -48,6 +48,15 @@ resource "google_project_iam_custom_role" "mediot_developer" {
     "storage.objects.get",
     # Project-level read
     "resourcemanager.projects.get",
+    # Secret Manager
+    "secretmanager.secrets.create",
+    "secretmanager.secrets.get",
+    "secretmanager.secrets.list",
+    "secretmanager.secrets.delete",
+    "secretmanager.versions.add",
+    "secretmanager.versions.get",
+    "secretmanager.versions.list",
+    "secretmanager.versions.destroy",
   ]
 }
 

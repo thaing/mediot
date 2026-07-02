@@ -74,6 +74,20 @@ resource "aws_iam_role_policy_attachment" "ecr_read" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+# Inline policy: allow ESO to read secrets from Secrets Manager
+resource "aws_iam_role_policy" "eks_node_secrets" {
+  name = "mediot-secrets-read"
+  role = aws_iam_role.eks_node.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+      Resource = "*"
+    }]
+  })
+}
+
 # EKS node group
 resource "aws_eks_node_group" "mediot" {
   cluster_name    = aws_eks_cluster.mediot.name

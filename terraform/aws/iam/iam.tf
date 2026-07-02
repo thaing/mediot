@@ -100,6 +100,20 @@ resource "aws_iam_policy" "developer" {
         ]
         Resource = "*"
       },
+      # ── Secrets Manager ──
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:ListSecrets",
+          "secretsmanager:TagResource",
+          "secretsmanager:DeleteSecret",
+        ]
+        Resource = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:mediot/*"
+      },
       # ── RDS ──
       {
         Effect = "Allow"

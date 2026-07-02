@@ -224,7 +224,51 @@ aws eks update-kubeconfig --region us-east-1 --name mediot-cluster
 kubectl get nodes
 ```
 
-### 7. Build and push container images
+### 7. Install External Secrets Operator
+
+```bash
+helm repo add external-secrets https://charts.external-secrets.io
+helm install external-secrets external-secrets/external-secrets \
+  --namespace external-secrets --create-namespace
+```
+
+### 8. Create secrets in AWS Secrets Manager
+
+Create each secret manually from the CLI (Developer group has permissions via IAM policy):
+
+```bash
+DB_PASSWORD=$(cd terraform/aws/rds && terraform output -raw db_password)
+DB_HOST=$(cd terraform/aws/rds && terraform output -raw db_host)
+
+aws secretsmanager create-secret --name mediot/database_url \
+  --secret-string "postgresql://mediot_admin:${DB_PASSWORD}@${DB_HOST}:5432/mediot"
+
+aws secretsmanager create-secret --name mediot/api_key \
+  --secret-string "your-strong-device-api-key"
+
+aws secretsmanager create-secret --name mediot/jwt_secret \
+  --secret-string "$(openssl rand -base64 32)"
+
+aws secretsmanager create-secret --name mediot/oauth_google_client_id \
+  --secret-string "your-google-client-id"
+
+aws secretsmanager create-secret --name mediot/oauth_google_client_secret \
+  --secret-string "your-google-client-secret"
+
+aws secretsmanager create-secret --name mediot/oauth_apple_client_id \
+  --secret-string "your-apple-client-id"
+
+aws secretsmanager create-secret --name mediot/oauth_apple_client_secret \
+  --secret-string "your-apple-client-secret"
+
+aws secretsmanager create-secret --name mediot/oauth_facebook_client_id \
+  --secret-string "your-facebook-client-id"
+
+aws secretsmanager create-secret --name mediot/oauth_facebook_client_secret \
+  --secret-string "your-facebook-client-secret"
+```
+
+### 9. Build and push container images
 
 ```bash
 # API
@@ -246,22 +290,27 @@ docker tag mediot-frontend:latest <aws-account>.dkr.ecr.us-east-1.amazonaws.com/
 docker push <aws-account>.dkr.ecr.us-east-1.amazonaws.com/mediot-frontend:latest
 ```
 
-### 8. Update ConfigMap with RDS endpoint
+### 10. Update ConfigMap
 
-Edit `k8s/configmap.yaml` and replace `DATABASE_HOST` with the RDS endpoint:
+Edit `k8s/configmap.yaml` and replace `DATABASE_HOST` with the RDS endpoint from the `db_host` Terraform output.
 
-```bash
-cd terraform/aws/rds
-terraform output db_host
-```
+No `k8s/secret.yaml` needed for AWS — External Secrets Operator syncs all values from Secrets Manager automatically.
 
-Also update `k8s/secret.yaml` — replace `DATABASE_URL` with the actual connection string and set a strong `API_KEY` + `JWT_SECRET`.
-
-### 9. Deploy to Kubernetes
+### 11. Deploy to Kubernetes
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/
+kubectl apply -f k8s/cluster-secret-store.yaml
+kubectl apply -f k8s/external-secret.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/api-deployment.yaml
+kubectl apply -f k8s/kafka-deployment.yaml
+kubectl apply -f k8s/worker-deployment.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
+
+# Verify secrets synced from AWS Secrets Manager
+kubectl get externalsecret -n mediot
+kubectl get secret mediot-secrets -n mediot
 ```
 
 ### 10. Verify deployment
@@ -299,38 +348,71 @@ terraform apply -var="project_id=YOUR_PROJECT_ID" -var="db_password=YourSecurePa
 
 ```bash
 gcloud container clusters get-credentials mediot-cluster --region us-central1
-kubectl get nodes  # verify connectivity
+kubectl get nodes
 ```
 
-### 4. Build and push container images (GCP)
+### 4. Install External Secrets Operator
 
 ```bash
-# API
+helm repo add external-secrets https://charts.external-secrets.io
+helm install external-secrets external-secrets/external-secrets \
+  --namespace external-secrets --create-namespace
+```
+
+### 5. Create secrets in GCP Secret Manager
+
+```bash
+DB_PASSWORD=YourSecurePassword123!
+DB_PRIVATE_IP=$(cd terraform/gcp && terraform output -raw db_private_ip 2>/dev/null || echo "YOUR_DB_IP")
+
+echo -n "postgresql://mediot_admin:${DB_PASSWORD}@${DB_PRIVATE_IP}:5432/mediot" | \
+  gcloud secrets create mediot-database-url --data-file=-
+
+echo -n "your-strong-device-api-key" | \
+  gcloud secrets create mediot-api-key --data-file=-
+
+echo -n "$(openssl rand -base64 32)" | \
+  gcloud secrets create mediot-jwt-secret --data-file=-
+
+echo -n "your-google-client-id" | \
+  gcloud secrets create mediot-oauth-google-client-id --data-file=-
+
+echo -n "your-google-client-secret" | \
+  gcloud secrets create mediot-oauth-google-client-secret --data-file=-
+
+# Repeat for Apple and Facebook OAuth secrets following the same pattern
+```
+
+### 6. Build and push container images (GCP)
+
+```bash
 docker build -t gcr.io/YOUR_PROJECT_ID/mediot-api:latest -f Dockerfile.api .
 docker push gcr.io/YOUR_PROJECT_ID/mediot-api:latest
 
-# Worker
 docker build -t gcr.io/YOUR_PROJECT_ID/mediot-worker:latest -f Dockerfile.worker .
 docker push gcr.io/YOUR_PROJECT_ID/mediot-worker:latest
 
-# Frontend
 docker build -t gcr.io/YOUR_PROJECT_ID/mediot-frontend:latest -f Dockerfile.frontend .
 docker push gcr.io/YOUR_PROJECT_ID/mediot-frontend:latest
 ```
 
-### 5. Update ConfigMap with Cloud SQL connection
+### 7. Update ConfigMap
 
-Edit `k8s/configmap.yaml` and replace `DATABASE_HOST` with the private IP from Terraform output:
+Edit `k8s/configmap.yaml` — replace `DATABASE_HOST` with the Cloud SQL private IP.
 
-```bash
-terraform output db_private_ip
-```
+No `k8s/secret.yaml` needed for GCP — External Secrets Operator syncs from Secret Manager.
 
-### 6. Deploy to Kubernetes
+### 8. Deploy to Kubernetes
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/
+kubectl apply -f k8s/cluster-secret-store.yaml
+kubectl apply -f k8s/external-secret.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/api-deployment.yaml
+kubectl apply -f k8s/kafka-deployment.yaml
+kubectl apply -f k8s/worker-deployment.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
 ```
 
 ### 7. Verify deployment

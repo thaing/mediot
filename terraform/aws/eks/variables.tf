@@ -1,4 +1,4 @@
 variable "region" { default = "us-east-1" }
 variable "cluster_name" { default = "mediot-cluster" }
 variable "node_instance_type" { default = "t3.medium" }
-variable "node_count" { default = 2 }
+variable "node_count" { default = 1 }

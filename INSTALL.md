@@ -316,9 +316,22 @@ kubectl apply -f k8s/frontend-deployment.yaml
 
 ```bash
 kubectl get pods -n mediot
-kubectl get ingress -n mediot
-# Access the application at the Ingress address
+kubectl get svc -n mediot
 ```
+
+Both `api-service` and `frontend-service` get AWS LoadBalancer external IPs (~2 min to provision):
+
+```
+api-service       LoadBalancer   10.x.x.x   <elb>.elb.amazonaws.com   8000:31338/TCP
+frontend-service  LoadBalancer   10.x.x.x   <elb>.elb.amazonaws.com   80:32765/TCP
+```
+
+Access the application:
+
+| Service | URL |
+|---------|-----|
+| API Swagger | `http://<api-service-EXTERNAL-IP>:8000/docs` |
+| Frontend | `http://<frontend-service-EXTERNAL-IP>` |
 
 ---
 

@@ -266,6 +266,15 @@ kubectl -n mediot create secret generic mediot-secrets \
 
 > `k8s/secret.yaml` is a reference template — never applied in cloud deployments.
 
+Verify the secret was created:
+
+```bash
+kubectl get secret mediot-secrets -n mediot
+kubectl describe secret mediot-secrets -n mediot
+```
+
+Expected: `Type: Opaque`, 9 data keys (`DATABASE_URL`, `API_KEY`, `JWT_SECRET`, etc.).
+
 ### 9. Build and push container images
 
 ```bash
@@ -368,6 +377,13 @@ kubectl -n mediot create secret generic mediot-secrets \
 ```
 
 > `k8s/secret.yaml` is a reference template — never applied in cloud deployments.
+
+Verify:
+
+```bash
+kubectl get secret mediot-secrets -n mediot
+kubectl describe secret mediot-secrets -n mediot
+```
 
 ### 6. Build and push container images (GCP)
 

@@ -246,7 +246,27 @@ aws secretsmanager create-secret --name mediot/oauth_google_client_id --secret-s
 # ... (repeat for all OAuth secrets visible in k8s/secret.yaml)
 ```
 
-### 8. Update k8s/secret.yaml with real values
+### 8. Create K8s secret from AWS Secrets Manager
+
+No file needed — values are fetched from Secrets Manager and piped straight into K8s:
+
+```bash
+kubectl -n mediot create secret generic mediot-secrets \
+  --from-literal=DATABASE_URL="$(aws secretsmanager get-secret-value --secret-id mediot/database_url --query SecretString --output text)" \
+  --from-literal=API_KEY="$(aws secretsmanager get-secret-value --secret-id mediot/api_key --query SecretString --output text)" \
+  --from-literal=JWT_SECRET="$(aws secretsmanager get-secret-value --secret-id mediot/jwt_secret --query SecretString --output text)" \
+  --from-literal=OAUTH_GOOGLE_CLIENT_ID="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_google_client_id --query SecretString --output text)" \
+  --from-literal=OAUTH_GOOGLE_CLIENT_SECRET="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_google_client_secret --query SecretString --output text)" \
+  --from-literal=OAUTH_APPLE_CLIENT_ID="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_apple_client_id --query SecretString --output text)" \
+  --from-literal=OAUTH_APPLE_CLIENT_SECRET="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_apple_client_secret --query SecretString --output text)" \
+  --from-literal=OAUTH_FACEBOOK_CLIENT_ID="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_facebook_client_id --query SecretString --output text)" \
+  --from-literal=OAUTH_FACEBOOK_CLIENT_SECRET="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_facebook_client_secret --query SecretString --output text)" \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+> `k8s/secret.yaml` is a reference template — never applied in cloud deployments.
+
+### 9. Build and push container images
 
 ```bash
 # API
@@ -271,8 +291,6 @@ docker push <aws-account>.dkr.ecr.us-east-1.amazonaws.com/mediot-frontend:latest
 ### 10. Update ConfigMap
 
 Edit `k8s/configmap.yaml` and replace `DATABASE_HOST` with the RDS endpoint from the `db_host` Terraform output.
-
-No `k8s/secret.yaml` needed for AWS — External Secrets Operator syncs all values from Secrets Manager automatically.
 
 ### 11. Deploy to Kubernetes
 
@@ -337,19 +355,19 @@ echo -n "$(openssl rand -base64 32)" | gcloud secrets create mediot-jwt-secret -
 # ... create remaining OAuth secrets as needed
 ```
 
-### 5. Update k8s/secret.yaml with real values
+### 5. Create K8s secret from GCP Secret Manager
+
+No file needed — values fetched from Secret Manager straight into K8s:
 
 ```bash
-export DATABASE_URL=$(gcloud secrets versions access latest --secret=mediot-database-url)
-export API_KEY=$(gcloud secrets versions access latest --secret=mediot-api-key)
-export JWT_SECRET=$(gcloud secrets versions access latest --secret=mediot-jwt-secret)
-
-kubectl create secret generic mediot-secrets -n mediot \
-  --from-literal=DATABASE_URL="$DATABASE_URL" \
-  --from-literal=API_KEY="$API_KEY" \
-  --from-literal=JWT_SECRET="$JWT_SECRET" \
+kubectl -n mediot create secret generic mediot-secrets \
+  --from-literal=DATABASE_URL="$(gcloud secrets versions access latest --secret=mediot-database-url)" \
+  --from-literal=API_KEY="$(gcloud secrets versions access latest --secret=mediot-api-key)" \
+  --from-literal=JWT_SECRET="$(gcloud secrets versions access latest --secret=mediot-jwt-secret)" \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
+
+> `k8s/secret.yaml` is a reference template — never applied in cloud deployments.
 
 ### 6. Build and push container images (GCP)
 
@@ -368,8 +386,6 @@ docker push gcr.io/YOUR_PROJECT_ID/mediot-frontend:latest
 
 Edit `k8s/configmap.yaml` — replace `DATABASE_HOST` with the Cloud SQL private IP.
 
-No `k8s/secret.yaml` needed for GCP — External Secrets Operator syncs from Secret Manager.
-
 ### 8. Deploy to Kubernetes
 
 ```bash
@@ -381,7 +397,7 @@ kubectl apply -f k8s/worker-deployment.yaml
 kubectl apply -f k8s/frontend-deployment.yaml
 ```
 
-### 7. Verify deployment
+### 9. Verify deployment
 
 ```bash
 kubectl get pods -n mediot

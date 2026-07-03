@@ -6,7 +6,6 @@ Complete deployment instructions for the medIoT platform on AWS and GCP.
 
 - **Terraform >= 1.5** — [Install](https://developer.hashicorp.com/terraform/downloads)
 - **kubectl** — [Install](https://kubernetes.io/docs/tasks/tools/)
-- **Helm >= 3** — [Install](https://helm.sh/docs/intro/install/) (for External Secrets Operator)
 - **AWS CLI** (`aws`) or **gcloud CLI** (`gcloud`) — depending on target cloud
 - **Docker** — for building container images
 - **Minikube** — for local K8s testing (optional: verify images and manifests before cloud deploy)
@@ -225,17 +224,9 @@ aws eks update-kubeconfig --region us-east-1 --name mediot-cluster
 kubectl get nodes
 ```
 
-### 7. Install External Secrets Operator
+### 7. Create secrets in AWS Secrets Manager
 
-```bash
-helm repo add external-secrets https://charts.external-secrets.io
-helm install external-secrets external-secrets/external-secrets \
-  --namespace external-secrets --create-namespace
-```
-
-### 8. Create secrets in AWS Secrets Manager
-
-Create each secret manually from the CLI (Developer group has permissions via IAM policy):
+Create each secret manually (Developer group has `secretsmanager:*` permissions):
 
 ```bash
 DB_PASSWORD=$(cd terraform/aws/rds && terraform output -raw db_password)
@@ -250,26 +241,12 @@ aws secretsmanager create-secret --name mediot/api_key \
 aws secretsmanager create-secret --name mediot/jwt_secret \
   --secret-string "$(openssl rand -base64 32)"
 
-aws secretsmanager create-secret --name mediot/oauth_google_client_id \
-  --secret-string "your-google-client-id"
-
-aws secretsmanager create-secret --name mediot/oauth_google_client_secret \
-  --secret-string "your-google-client-secret"
-
-aws secretsmanager create-secret --name mediot/oauth_apple_client_id \
-  --secret-string "your-apple-client-id"
-
-aws secretsmanager create-secret --name mediot/oauth_apple_client_secret \
-  --secret-string "your-apple-client-secret"
-
-aws secretsmanager create-secret --name mediot/oauth_facebook_client_id \
-  --secret-string "your-facebook-client-id"
-
-aws secretsmanager create-secret --name mediot/oauth_facebook_client_secret \
-  --secret-string "your-facebook-client-secret"
+# OAuth secrets (optional — create only if using social login)
+aws secretsmanager create-secret --name mediot/oauth_google_client_id --secret-string "..."
+# ... (repeat for all OAuth secrets visible in k8s/secret.yaml)
 ```
 
-### 9. Build and push container images
+### 8. Update k8s/secret.yaml with real values
 
 ```bash
 # API
@@ -301,17 +278,11 @@ No `k8s/secret.yaml` needed for AWS — External Secrets Operator syncs all valu
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/cluster-secret-store.yaml
-kubectl apply -f k8s/external-secret.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/api-deployment.yaml
 kubectl apply -f k8s/kafka-deployment.yaml
 kubectl apply -f k8s/worker-deployment.yaml
 kubectl apply -f k8s/frontend-deployment.yaml
-
-# Verify secrets synced from AWS Secrets Manager
-kubectl get externalsecret -n mediot
-kubectl get secret mediot-secrets -n mediot
 ```
 
 ### 10. Verify deployment
@@ -352,15 +323,7 @@ gcloud container clusters get-credentials mediot-cluster --region us-central1
 kubectl get nodes
 ```
 
-### 4. Install External Secrets Operator
-
-```bash
-helm repo add external-secrets https://charts.external-secrets.io
-helm install external-secrets external-secrets/external-secrets \
-  --namespace external-secrets --create-namespace
-```
-
-### 5. Create secrets in GCP Secret Manager
+### 4. Create secrets in GCP Secret Manager
 
 ```bash
 DB_PASSWORD=YourSecurePassword123!
@@ -369,19 +332,23 @@ DB_PRIVATE_IP=$(cd terraform/gcp && terraform output -raw db_private_ip 2>/dev/n
 echo -n "postgresql://mediot_admin:${DB_PASSWORD}@${DB_PRIVATE_IP}:5432/mediot" | \
   gcloud secrets create mediot-database-url --data-file=-
 
-echo -n "your-strong-device-api-key" | \
-  gcloud secrets create mediot-api-key --data-file=-
+echo -n "your-strong-device-api-key" | gcloud secrets create mediot-api-key --data-file=-
+echo -n "$(openssl rand -base64 32)" | gcloud secrets create mediot-jwt-secret --data-file=-
+# ... create remaining OAuth secrets as needed
+```
 
-echo -n "$(openssl rand -base64 32)" | \
-  gcloud secrets create mediot-jwt-secret --data-file=-
+### 5. Update k8s/secret.yaml with real values
 
-echo -n "your-google-client-id" | \
-  gcloud secrets create mediot-oauth-google-client-id --data-file=-
+```bash
+export DATABASE_URL=$(gcloud secrets versions access latest --secret=mediot-database-url)
+export API_KEY=$(gcloud secrets versions access latest --secret=mediot-api-key)
+export JWT_SECRET=$(gcloud secrets versions access latest --secret=mediot-jwt-secret)
 
-echo -n "your-google-client-secret" | \
-  gcloud secrets create mediot-oauth-google-client-secret --data-file=-
-
-# Repeat for Apple and Facebook OAuth secrets following the same pattern
+kubectl create secret generic mediot-secrets -n mediot \
+  --from-literal=DATABASE_URL="$DATABASE_URL" \
+  --from-literal=API_KEY="$API_KEY" \
+  --from-literal=JWT_SECRET="$JWT_SECRET" \
+  --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 ### 6. Build and push container images (GCP)
@@ -407,8 +374,6 @@ No `k8s/secret.yaml` needed for GCP — External Secrets Operator syncs from Sec
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/cluster-secret-store.yaml
-kubectl apply -f k8s/external-secret.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/api-deployment.yaml
 kubectl apply -f k8s/kafka-deployment.yaml

@@ -5,6 +5,6 @@ metadata:
   namespace: mediot
 data:
   KAFKA_BROKER: "kafka-service.mediot.svc.cluster.local:9092"
-  DATABASE_HOST: "postgres-host"
+  DATABASE_HOST: "mediot-postgres.c6nn6rqlgxwa.us-east-1.rds.amazonaws.com"
   DATABASE_PORT: "5432"
   DATABASE_NAME: "mediot"

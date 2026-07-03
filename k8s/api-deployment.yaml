@@ -6,7 +6,7 @@ metadata:
   labels:
     app: mediot-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mediot-api
@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: api
-          image: mediot-api:latest
-          imagePullPolicy: IfNotPresent
+          image: 697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-api:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:

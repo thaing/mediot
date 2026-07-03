@@ -23,7 +23,7 @@ class KafkaProducerService:
 
     def publish(self, topic: str, key: str | None, value: dict):
         if self._producer is None:
-            raise KafkaException("Producer not connected")
+            self.connect()
         try:
             future = self._producer.send(topic, key=key, value=value)
             result = future.get(timeout=10)

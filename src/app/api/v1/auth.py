@@ -10,6 +10,7 @@ from src.app.config import settings
 from src.app.deps import get_db
 from src.app.middleware.auth import create_access_token
 from src.app.schemas.user import UserOut
+from src.models.device import Device
 from src.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -128,6 +129,13 @@ async def callback(
         db.add(user)
         db.commit()
         db.refresh(user)
+
+        device = db.query(Device).filter(
+            Device.user_id == None
+        ).order_by(Device.d_id).first()
+        if device:
+            device.user_id = user.id
+            db.commit()
 
     access_token = create_access_token(user.id)
     user_out = UserOut(

@@ -22,9 +22,7 @@ if settings.OAUTH_GOOGLE_CLIENT_ID:
         name="google",
         client_id=settings.OAUTH_GOOGLE_CLIENT_ID,
         client_secret=settings.OAUTH_GOOGLE_CLIENT_SECRET,
-        authorize_url="https://accounts.google.com/o/oauth2/auth",
-        access_token_url="https://oauth2.googleapis.com/token",
-        userinfo_endpoint="https://www.googleapis.com/oauth2/v3/userinfo",
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
         client_kwargs={"scope": "openid email profile"},
     )
 

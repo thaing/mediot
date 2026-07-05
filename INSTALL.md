@@ -66,6 +66,62 @@ Open [http://localhost:5173](http://localhost:5173). Dev server proxies `/api` t
 
 ---
 
+## OAuth Provider Setup
+
+Required for social login. Configure at least one before deployment.
+
+### Google
+
+1. Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Click **Create Credentials → OAuth client ID**
+3. Application type: **Web application**
+4. Add authorized redirect URIs:
+   - For local dev: `http://localhost:8000/api/v1/auth/callback/google`
+   - For AWS/GCP: `http://<your-elb-hostname>:8000/api/v1/auth/callback/google`
+5. Copy the **Client ID** and **Client Secret**
+6. Go to **OAuth consent screen** → set **User Type: External** (allows any Gmail)
+7. Add your email as a test user, or click **Publish App**
+
+Cost: free. Works with any Google account (Gmail, Workspace).
+
+### Facebook
+
+1. Go to [Meta for Developers](https://developers.facebook.com/), create an app (type: **Consumer**)
+2. In the dashboard, click **Facebook Login → Settings**
+3. Add valid OAuth redirect URIs:
+   - Local: `http://localhost:8000/api/v1/auth/callback/facebook`
+   - AWS/GCP: `http://<your-elb>:8000/api/v1/auth/callback/facebook`
+4. Copy **App ID** and **App Secret** from Settings → Basic
+5. The app works in **Development Mode** for you — no review needed for personal use
+
+Cost: free. Any Facebook account can log in.
+
+### Apple
+
+1. Go to [Apple Developer → Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/)
+2. Create an **App ID** (if you don't have one)
+3. Create a **Service ID** — this is your OAuth client
+4. Under the Service ID, enable **Sign In with Apple**, add redirect URLs:
+   - Local: `http://localhost:8000/api/v1/auth/callback/apple`
+   - AWS/GCP: `http://<your-elb>:8000/api/v1/auth/callback/apple`
+5. Create a **Key** under Keys tab → enable Sign In with Apple → download the `.p8` file
+6. Copy the **Service ID** (Client ID), **Team ID**, and **Key ID**
+
+Cost: $99/year (Apple Developer Program). Users need an Apple ID.
+
+### Adding credentials to the app
+
+Set these environment variables or AWS/GCP secrets:
+
+| Variable | Google | Facebook | Apple |
+|----------|--------|----------|-------|
+| Client ID | `OAUTH_GOOGLE_CLIENT_ID` | `OAUTH_FACEBOOK_CLIENT_ID` | `OAUTH_APPLE_CLIENT_ID` |
+| Client Secret | `OAUTH_GOOGLE_CLIENT_SECRET` | `OAUTH_FACEBOOK_CLIENT_SECRET` | `OAUTH_APPLE_CLIENT_SECRET` |
+
+For cloud deployments, create matching secrets in AWS Secrets Manager or GCP Secret Manager. Providers with empty client IDs are automatically disabled and return 503.
+
+---
+
 ## Minikube Testing
 
 Verify all containers, manifests, and the full K8s topology before deploying to the cloud. Runs everything locally — no AWS or GCP needed.

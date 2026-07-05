@@ -147,4 +147,10 @@ async def callback(
         created_at=user.created_at.isoformat() if user.created_at else None,
     )
 
-    return {"access_token": access_token, "user": user_out.model_dump()}
+    import urllib.parse
+    params = urllib.parse.urlencode({
+        "access_token": access_token,
+        "user": user_out.model_dump_json(),
+    })
+    redirect_url = f"{settings.FRONTEND_URL}/login?{params}"
+    return RedirectResponse(url=redirect_url)

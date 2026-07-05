@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     OAUTH_FACEBOOK_CLIENT_SECRET: str = ""
 
     CORS_ORIGINS: str = "http://localhost:5173"
+    FRONTEND_URL: str = "http://localhost:5173"
 
     class Config:
         env_file = ".env"

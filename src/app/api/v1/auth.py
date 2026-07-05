@@ -80,10 +80,11 @@ async def callback(
     token = await client.authorize_access_token(request)
 
     if provider == "google":
-        userinfo = await client.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo"
+        resp = await client.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            token=token,
         )
-        profile = userinfo.json()
+        profile = resp.json()
         email = profile.get("email", "")
         first_name = profile.get("given_name", "")
         last_name = profile.get("family_name", "")
@@ -94,10 +95,11 @@ async def callback(
         first_name = name_info.get("firstName", "")
         last_name = name_info.get("lastName", "")
     elif provider == "facebook":
-        userinfo = await client.get(
-            "https://graph.facebook.com/me?fields=id,email,first_name,last_name"
+        resp = await client.get(
+            "https://graph.facebook.com/me?fields=id,email,first_name,last_name",
+            token=token,
         )
-        profile = userinfo.json()
+        profile = resp.json()
         email = profile.get("email", "")
         first_name = profile.get("first_name", "")
         last_name = profile.get("last_name", "")

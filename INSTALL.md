@@ -391,6 +391,76 @@ Access the application:
 
 ---
 
+## Re-creating EKS (after `terraform destroy`)
+
+Destroy EKS to save costs (`cd terraform/aws/eks && terraform destroy`). RDS, VPC, IAM, and AWS Secrets Manager secrets all survive. To bring it back:
+
+### 1. Re-provision EKS
+
+```bash
+cd terraform/aws/eks
+terraform apply
+```
+
+### 2. Re-configure kubectl
+
+```bash
+aws eks update-kubeconfig --region us-east-1 --name mediot-cluster
+kubectl get nodes
+```
+
+### 3. Re-create K8s secret
+
+Values live in AWS Secrets Manager and survive cluster destruction. Recreate the K8s Secret from them:
+
+```bash
+kubectl -n mediot create secret generic mediot-secrets \
+  --from-literal=DATABASE_URL="$(aws secretsmanager get-secret-value --secret-id mediot/database_url --query SecretString --output text --profile mediot)" \
+  --from-literal=API_KEY="$(aws secretsmanager get-secret-value --secret-id mediot/api_key --query SecretString --output text --profile mediot)" \
+  --from-literal=JWT_SECRET="$(aws secretsmanager get-secret-value --secret-id mediot/jwt_secret --query SecretString --output text --profile mediot)" \
+  --from-literal=OAUTH_GOOGLE_CLIENT_ID="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_google_client_id --query SecretString --output text --profile mediot)" \
+  --from-literal=OAUTH_GOOGLE_CLIENT_SECRET="$(aws secretsmanager get-secret-value --secret-id mediot/oauth_google_client_secret --query SecretString --output text --profile mediot)" \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### 4. Update ConfigMap
+
+The RDS endpoint may have changed if RDS was also recreated. Get the current hostname:
+
+```bash
+cd terraform/aws/rds && terraform output db_host
+```
+
+Edit `k8s/configmap.yaml` and replace `DATABASE_HOST`.
+
+### 5. Deploy workloads
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/api-deployment.yaml
+kubectl apply -f k8s/kafka-deployment.yaml
+kubectl apply -f k8s/worker-deployment.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
+```
+
+### 6. Run migrations
+
+```bash
+kubectl exec -n mediot deployment/mediot-api -- alembic upgrade head
+```
+
+### 7. Verify
+
+```bash
+kubectl get pods -n mediot
+kubectl get svc -n mediot   # note new LoadBalancer hostnames
+```
+
+New ELB hostnames will be assigned. Update any OAuth redirect URIs with the new frontend hostname and the Google Cloud Console `Authorized redirect URIs`.
+
+---
+
 ## GCP Deployment
 
 ### 1. Configure gcloud

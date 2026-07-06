@@ -44,11 +44,11 @@ Swagger UI at [http://localhost:8000/docs](http://localhost:8000/docs).
 ### 2. Run the device simulator
 
 ```bash
-# Default: device HM-2790, 1 reading/sec, starts at 100% battery
-python scripts/simulator.py --api-key change-me-device-api-key
+# Default: 1 reading/sec, starts at 100% battery
+python scripts/simulator.py --device-id HM-001 --api-key change-me-device-api-key
 
 # Custom settings
-python scripts/simulator.py --api-key change-me-device-api-key --device-id MY-DEVICE-01 --interval 0.5 --start-battery 50
+python scripts/simulator.py --device-id MY-DEVICE-01 --api-key change-me-device-api-key --interval 0.5 --start-battery 50
 
 # See all options
 python scripts/simulator.py --help
@@ -277,6 +277,7 @@ terraform apply -var='db_password=YourSecurePassword123!'
 
 ```bash
 aws eks update-kubeconfig --region us-east-1 --profile if-not-default --name mediot-cluster
+kubectl config set-context --current --namespace=mediot
 kubectl get nodes
 ```
 
@@ -574,7 +575,7 @@ python scripts/simulator.py
 ### Check the API
 
 ```bash
-curl -H "X-API-Key: your-key" http://<INGRESS_ADDRESS>/api/v1/readings/ -d '{"ts":1782561130,"d_id":"HM-2790","hr":78,"spo2":97,"bp_sys":122,"bp_dia":81,"bat":86}'
+curl -H "X-API-Key: your-key" http://<INGRESS_ADDRESS>/api/v1/readings/ -d '{"ts":1782561130,"d_id":"HM-001","hr":78,"spo2":97,"bp_sys":122,"bp_dia":81,"bat":86}'
 ```
 
 ### Open the frontend

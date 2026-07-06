@@ -37,7 +37,9 @@ def main():
     )
     parser.add_argument("--api-key", default=os.environ.get("API_KEY", ""))
     parser.add_argument(
-        "--device-id", default=os.environ.get("DEVICE_ID", "HM-2790")
+        "--device-id",
+        required=True,
+        help="Device identifier (required, e.g. HM-001)",
     )
     parser.add_argument(
         "--interval", type=float, default=1.0, help="Seconds between readings"

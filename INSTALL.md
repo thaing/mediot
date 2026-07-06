@@ -276,7 +276,7 @@ terraform apply -var='db_password=YourSecurePassword123!'
 ### 6. Configure kubectl
 
 ```bash
-aws eks update-kubeconfig --region us-east-1 --name mediot-cluster
+aws eks update-kubeconfig --region us-east-1 --profile if-not-default --name mediot-cluster
 kubectl get nodes
 ```
 

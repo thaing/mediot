@@ -12,7 +12,7 @@ class ReadingIn(BaseModel):
 
 
 class ReadingOut(BaseModel):
-    id: str
+    id: int
     ts: int
     d_id: str
     hr: int | None = None

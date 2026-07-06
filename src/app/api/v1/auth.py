@@ -1,4 +1,3 @@
-import uuid
 from typing import Literal
 
 from authlib.integrations.starlette_client import OAuth
@@ -82,7 +81,7 @@ async def callback(
     if provider == "google":
         resp = await client.get(
             "https://www.googleapis.com/oauth2/v3/userinfo",
-            token=token,
+            token=token.get("access_token"),
         )
         profile = resp.json()
         email = profile.get("email", "")
@@ -97,7 +96,7 @@ async def callback(
     elif provider == "facebook":
         resp = await client.get(
             "https://graph.facebook.com/me?fields=id,email,first_name,last_name",
-            token=token,
+            token=token.get("access_token"),
         )
         profile = resp.json()
         email = profile.get("email", "")
@@ -120,7 +119,6 @@ async def callback(
 
     if user is None:
         user = User(
-            id=str(uuid.uuid4()),
             first_name=first_name,
             last_name=last_name,
             email=email,

@@ -11,7 +11,7 @@ class UserCreate(BaseModel):
 
 
 class UserOut(BaseModel):
-    id: str
+    id: int
     first_name: str | None = None
     last_name: str | None = None
     email: str

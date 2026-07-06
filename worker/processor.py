@@ -1,5 +1,4 @@
 import logging
-import uuid
 from sqlalchemy.orm import Session
 
 from src.models.device import Device
@@ -51,7 +50,6 @@ def process_reading(db_session: Session, payload: dict) -> bool:
         )
         if device is None:
             device = Device(
-                id=str(uuid.uuid4()),
                 d_id=payload["d_id"],
                 user_id=None,
             )
@@ -60,7 +58,6 @@ def process_reading(db_session: Session, payload: dict) -> bool:
 
         # Insert vitals record
         vitals = Vitals(
-            id=str(uuid.uuid4()),
             device_id=device.id,
             ts=payload["ts"],
             hr=payload.get("hr"),

@@ -43,6 +43,9 @@ resource "aws_eks_cluster" "mediot" {
   vpc_config {
     subnet_ids = concat(data.aws_subnets.public.ids, data.aws_subnets.private.ids)
   }
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
   depends_on = [aws_iam_role_policy_attachment.eks_cluster]
 }
 
@@ -105,4 +108,20 @@ resource "aws_eks_node_group" "mediot" {
     aws_iam_role_policy_attachment.eks_cni,
     aws_iam_role_policy_attachment.ecr_read,
   ]
+}
+
+# EKS access entry — grant Developer IAM user kubectl access
+resource "aws_eks_access_entry" "developer" {
+  cluster_name  = aws_eks_cluster.mediot.name
+  principal_arn = var.developer_iam_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "developer_admin" {
+  cluster_name  = aws_eks_cluster.mediot.name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = var.developer_iam_arn
+  access_scope {
+    type = "cluster"
+  }
 }

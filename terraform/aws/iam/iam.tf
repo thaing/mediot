@@ -60,6 +60,7 @@ resource "aws_iam_policy" "developer" {
           "eks:ListClusters", "eks:ListNodegroups",
           "eks:DescribeUpdate", "eks:DescribeClusterVersions",
           "eks:TagResource", "eks:UntagResource",
+          "eks:AccessKubernetesApi",
         ]
         Resource = "*"
       },

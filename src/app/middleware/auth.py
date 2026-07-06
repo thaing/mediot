@@ -11,9 +11,9 @@ def verify_api_key(api_key: str) -> bool:
     return hmac.compare_digest(api_key, settings.API_KEY)
 
 
-def create_access_token(user_id: str) -> str:
+def create_access_token(user_id: int) -> str:
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "exp": datetime.now(timezone.utc) + timedelta(hours=24),
         "iat": datetime.now(timezone.utc),
     }

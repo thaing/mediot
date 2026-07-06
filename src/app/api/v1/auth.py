@@ -141,9 +141,12 @@ async def callback(
         created_at=user.created_at.isoformat() if user.created_at else None,
     )
 
+    device = db.query(Device).filter_by(user_id=user.id).order_by(Device.d_id).first()
+
     import urllib.parse
     params = urllib.parse.urlencode({
         "access_token": access_token,
         "user": user_out.model_dump_json(),
+        "device_id": device.d_id if device else "",
     })
     return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?{params}")

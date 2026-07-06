@@ -9,16 +9,20 @@ export function handleOAuthCallback() {
   const token = params.get('access_token')
   const userJson = params.get('user')
 
-  if (!token) {
+    if (!token) {
     const searchParams = new URLSearchParams(window.location.search)
     const queryToken = searchParams.get('access_token')
     const queryUser = searchParams.get('user')
+    const queryDeviceId = searchParams.get('device_id')
     if (queryToken) {
       console.log('[OAuth] Found token in URL query params')
       localStorage.setItem('access_token', queryToken)
       if (queryUser) {
         localStorage.setItem('user', queryUser)
         console.log('[OAuth] Stored user data in localStorage')
+      }
+      if (queryDeviceId) {
+        localStorage.setItem('device_id', queryDeviceId)
       }
       return { token: queryToken, user: queryUser ? JSON.parse(decodeURIComponent(queryUser)) : null }
     }

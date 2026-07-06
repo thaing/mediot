@@ -36,11 +36,11 @@ function login(provider) {
   initOAuthLogin(provider)
 }
 
-onMounted(() => {
+onMounted(async () => {
   const result = handleOAuthCallback()
   if (result?.token) {
     authStore.login(result.token, result.user)
-    router.push('/')
+    await router.replace('/')
   }
 })
 </script>

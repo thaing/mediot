@@ -80,13 +80,10 @@ async def callback(
     token = await client.authorize_access_token(request)
 
     if provider == "google":
-        userinfo = await client.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo"
-        )
-        profile = userinfo.json()
-        email = profile.get("email", "")
-        first_name = profile.get("given_name", "")
-        last_name = profile.get("family_name", "")
+        userinfo = token.get("userinfo", {})
+        email = userinfo.get("email", "")
+        first_name = userinfo.get("given_name", "")
+        last_name = userinfo.get("family_name", "")
     elif provider == "apple":
         userinfo = token.get("userinfo", {})
         email = userinfo.get("email", "")

@@ -1,3 +1,4 @@
+import uuid
 from typing import Literal
 
 from authlib.integrations.starlette_client import OAuth
@@ -21,7 +22,9 @@ if settings.OAUTH_GOOGLE_CLIENT_ID:
         name="google",
         client_id=settings.OAUTH_GOOGLE_CLIENT_ID,
         client_secret=settings.OAUTH_GOOGLE_CLIENT_SECRET,
-        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        authorize_url="https://accounts.google.com/o/oauth2/auth",
+        access_token_url="https://oauth2.googleapis.com/token",
+        userinfo_endpoint="https://www.googleapis.com/oauth2/v3/userinfo",
         client_kwargs={"scope": "openid email profile"},
     )
 
@@ -79,11 +82,10 @@ async def callback(
     token = await client.authorize_access_token(request)
 
     if provider == "google":
-        resp = await client.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            token=client.token,
+        userinfo = await client.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo"
         )
-        profile = resp.json()
+        profile = userinfo.json()
         email = profile.get("email", "")
         first_name = profile.get("given_name", "")
         last_name = profile.get("family_name", "")
@@ -94,11 +96,10 @@ async def callback(
         first_name = name_info.get("firstName", "")
         last_name = name_info.get("lastName", "")
     elif provider == "facebook":
-        resp = await client.get(
-            "https://graph.facebook.com/me?fields=id,email,first_name,last_name",
-            token=client.token,
+        userinfo = await client.get(
+            "https://graph.facebook.com/me?fields=id,email,first_name,last_name"
         )
-        profile = resp.json()
+        profile = userinfo.json()
         email = profile.get("email", "")
         first_name = profile.get("first_name", "")
         last_name = profile.get("last_name", "")
@@ -150,5 +151,4 @@ async def callback(
         "access_token": access_token,
         "user": user_out.model_dump_json(),
     })
-    redirect_url = f"{settings.FRONTEND_URL}/login?{params}"
-    return RedirectResponse(url=redirect_url)
+    return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?{params}")

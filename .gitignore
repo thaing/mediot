@@ -13,3 +13,5 @@ venv/
 *.tfstate.*
 *.tfplan
 tfplan
+note.md
+k8s/mediot-secrets-backup.yaml

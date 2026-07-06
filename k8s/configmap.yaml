@@ -8,4 +8,4 @@ data:
   DATABASE_HOST: "mediot-postgres.c6nn6rqlgxwa.us-east-1.rds.amazonaws.com"
   DATABASE_PORT: "5432"
   DATABASE_NAME: "mediot"
-  FRONTEND_URL: "http://a2c00119273a444f4828ef8036ee7476-825493860.us-east-1.elb.amazonaws.com"
+  FRONTEND_URL: "http://a25594610e6334a1b975ab74c74ba30e-2094597197.us-east-1.elb.amazonaws.com"

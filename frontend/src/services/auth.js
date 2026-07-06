@@ -14,12 +14,15 @@ export function handleOAuthCallback() {
     const queryToken = searchParams.get('access_token')
     const queryUser = searchParams.get('user')
     if (queryToken) {
+      console.log('[OAuth] Found token in URL query params')
       localStorage.setItem('access_token', queryToken)
       if (queryUser) {
         localStorage.setItem('user', queryUser)
+        console.log('[OAuth] Stored user data in localStorage')
       }
       return { token: queryToken, user: queryUser ? JSON.parse(decodeURIComponent(queryUser)) : null }
     }
+    console.log('[OAuth] No token found in URL')
     return null
   }
 

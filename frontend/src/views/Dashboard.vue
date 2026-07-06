@@ -87,8 +87,9 @@ async function loadData() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   deviceId.value = localStorage.getItem('device_id') || 'HM-2790'
+  await new Promise(r => setTimeout(r, 500))
   loadData()
   interval = setInterval(loadData, 5000)
 })

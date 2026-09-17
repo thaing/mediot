@@ -1,0 +1,66 @@
+name: CI for MedIoT
+on:
+  push:
+    branches:  # also trigger via tags/releases later
+      - main
+      - mediot-gh-action
+    # tags:
+    #   - v*
+
+env:
+  IMAGE_NAME: mediot
+      
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write     # needed to push to ghcr.io
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set image tag
+        id: meta
+        run: |
+          echo "tag=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${{ github.repository }}:${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.api
+          push: true
+          tags: ${{ steps.meta.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Update GitOps repo image tag
+        env:
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+          IMAGE: ${{ steps.meta.outputs.image }}
+        run: |
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/you/gitops.git
+          cd gitops
+          sed -i "s#image: .*#image: ${IMAGE}#" deploy/overlays/prod/deployment.yaml
+          git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
+          git push
+
+      - name: Trigger ArgoCD refresh
+        env:
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+          REPO: you/gitops
+        run: |
+          curl -fsSL -X POST \
+            -H "Authorization: Bearer ${GITOPS_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/dispatches" \
+            -d '{"event_type":"trigger-argo-sync"}'

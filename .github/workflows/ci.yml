@@ -45,7 +45,7 @@ jobs:
           GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
           IMAGE: ${{ steps.meta.outputs.image }}
         run: |
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/you/gitops.git
+          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/thaing/gitops.git
           cd gitops
           sed -i "s#image: .*#image: ${IMAGE}#" deploy/overlays/prod/deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
@@ -53,7 +53,7 @@ jobs:
       - name: Trigger ArgoCD refresh
         env:
           GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
-          REPO: you/gitops
+          REPO: thaing/gitops
         run: |
           curl -fsSL -X POST \
             -H "Authorization: Bearer ${GITOPS_TOKEN}" \

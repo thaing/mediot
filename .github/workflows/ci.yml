@@ -47,7 +47,7 @@ jobs:
         run: |
           git clone https://x-access-token:${GITOPS_TOKEN}@github.com/thaing/gitops.git
           cd gitops
-          sed -i "s#image: .*#image: ${IMAGE}#" deploy/overlays/prod/deployment.yaml
+          sed -i "s#image: .*#image: ${IMAGE}#" apps/mediot/base/deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
           git push
       - name: Trigger ArgoCD refresh

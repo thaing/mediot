@@ -9,8 +9,6 @@ on:
 
 env:
   IMAGE_NAME: mediot
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -20,20 +18,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-
       - name: Set image tag
         id: meta
         run: |
           echo "tag=${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
           echo "image=ghcr.io/${{ github.repository }}:${GITHUB_SHA::8}" >> "$GITHUB_OUTPUT"
-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and push API image
         uses: docker/build-push-action@v6
         with:
@@ -43,7 +40,6 @@ jobs:
           tags: ${{ steps.meta.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
       - name: Update GitOps repo image tag
         env:
           GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
@@ -54,7 +50,6 @@ jobs:
           sed -i "s#image: .*#image: ${IMAGE}#" deploy/overlays/prod/deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
           git push
-
       - name: Trigger ArgoCD refresh
         env:
           GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}

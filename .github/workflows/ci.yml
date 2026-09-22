@@ -67,11 +67,8 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Update GitOps repo Worker image tag
         env:
-          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
           IMAGE: ${{ steps.worker.outputs.image }}
         run: |
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/thaing/gitops.git
-          cd gitops
           sed -i "s#image: .*#image: ${IMAGE}#" apps/mediot/base/worker-deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
           git push
@@ -92,11 +89,8 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Update GitOps repo Frontend image tag
         env:
-          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
           IMAGE: ${{ steps.frontend.outputs.image }}
         run: |
-          git clone https://x-access-token:${GITOPS_TOKEN}@github.com/thaing/gitops.git
-          cd gitops
           sed -i "s#image: .*#image: ${IMAGE}#" apps/mediot/base/frontend-deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
           git push

@@ -69,6 +69,7 @@ jobs:
         env:
           IMAGE: ${{ steps.worker.outputs.image }}
         run: |
+          cd gitops
           sed -i "s#image: .*#image: ${IMAGE}#" apps/mediot/base/worker-deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
           git push
@@ -91,6 +92,7 @@ jobs:
         env:
           IMAGE: ${{ steps.frontend.outputs.image }}
         run: |
+          cd gitops
           sed -i "s#image: .*#image: ${IMAGE}#" apps/mediot/base/frontend-deployment.yaml
           git -c user.name=ci -c user.email=ci@github commit -am "Bump image to ${IMAGE}"
           git push

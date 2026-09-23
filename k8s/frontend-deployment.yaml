@@ -7,6 +7,7 @@ metadata:
     app: mediot-frontend
 spec:
   replicas: 1
+  revisionHistoryLimit: 0
   selector:
     matchLabels:
       app: mediot-frontend
@@ -17,7 +18,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 697957957974.dkr.ecr.us-east-1.amazonaws.com/mediot-frontend:latest
+          image: ghcr.io/thaing/mediot-frontend:e16628a5
           imagePullPolicy: Always
           ports:
             - containerPort: 80
